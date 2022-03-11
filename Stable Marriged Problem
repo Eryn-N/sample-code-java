@@ -1,0 +1,73 @@
+public boolean match (){
+		ArrayList < Integer > Free_list = new ArrayList <Integer> ();//List of free suitors, item values are suitors ID
+		ArrayList < Integer > Free_list_temp = new ArrayList <Integer> (); //Temporary list 
+		ArrayList < Integer > Preferred_R = new ArrayList <Integer> ();//List of preferred receiver, item values are receivers ID
+		
+		boolean matching = false;
+		boolean chk =  matchingCanProceed(); //checking the conditions for matching
+		long start = System . currentTimeMillis ();//start counting time
+			if (chk) {	
+				//Free suitor list
+				for (int m=0; m<S.size(); m++) {
+					Free_list.add(m);}
+				do {
+					//Preferred receivers of a suitor
+					Preferred_R = new ArrayList <Integer> (); // list of receivers each round
+					for (int i=0; i<Free_list.size();i++) {
+						Preferred_R.add (S.get(Free_list.get(i)).getRemainRanking(0)-1);	
+						S.get(Free_list.get(i)).RemoveRemainRanking(); 
+						                                  } 
+					
+					//Initialize temporary list
+					Free_list_temp = new ArrayList <Integer> ();
+					for (int i=0; i<Free_list.size();i++)
+					 	{Free_list_temp.add (Free_list.get(i));}
+					
+					//Matching suitors with free receivers
+					for (int k = 0; k<Preferred_R.size();k++) {
+						int Receiver = Preferred_R.get(k); // get the index (ID) of proposed receiver
+						int Suitor = Free_list_temp.get(k);	//get the index (ID) of proposing suitor						
+						if (makeProposal(Suitor,Receiver)) {	//whether the receiver is free								
+							makeEngagement(Suitor,Receiver,-1);//make engagement
+							if (S.get(Suitor).getNMatches() == S.get(Suitor).getMaxMatches ())	
+							    { Free_list.remove(Integer.valueOf(Suitor));}// removing suitor							
+							                                }						
+					//Receivers consider offers
+						else {							
+							//finding the old suitor ranking; old suitor is the one with the worst rank in the receiver match list
+							ArrayList < Integer > old_R_matches = new ArrayList < Integer > ();
+							old_R_matches = R.get(Receiver).getAllMatches();// old_R_matches item values are the suitor IDs in the receiver match list
+							int new_S_rank = R.get(Receiver).findRankingByID(Suitor); //ranking of new proposing suitor							
+							int oldSuitor = old_R_matches.get(0); // old suitor is the suitor ID with the worst rank in the receiver match list
+							int oldSuitor_ranking = R.get(Receiver).findRankingByID(oldSuitor); // ranking of the old suitor (aka. the worst ranking)
+							for (int m = 1; m< old_R_matches.size(); m++) {
+								int ranking_match_m = R.get(Receiver).findRankingByID(old_R_matches.get(m)); // ranking of a suitor (location index m) in the match list
+								if (oldSuitor_ranking > ranking_match_m) {
+									oldSuitor = old_R_matches.get(m);
+									oldSuitor_ranking = ranking_match_m;									
+								                                         }								
+							                                               }
+							
+							//matching with engaged receiver	
+							if (oldSuitor_ranking > new_S_rank) {																		
+								if (!Free_list.contains(oldSuitor)){Free_list.add(oldSuitor);}
+								makeEngagement(Suitor,Receiver,oldSuitor);								
+								                                }	
+							
+							if (S.get(Suitor).getNMatches() == S.get(Suitor).getMaxMatches ())	
+								{ Free_list.remove(Integer.valueOf(Suitor));}// removing suitor								
+							 }																		   							
+					                                           }
+	
+					} while (!Free_list.isEmpty() ); //end do while
+				this.compTime = System . currentTimeMillis () -start ;//stop counting time
+				print();
+				System.out.format("%d matches made in %dms!",getNSuitorOpenings (), this.compTime); 
+				System.out.println("");	
+				System.out.println("");		
+				getStDevSuitorRegret();
+					
+			           }// end if
+
+			return matching;	
+	                    } //end match
